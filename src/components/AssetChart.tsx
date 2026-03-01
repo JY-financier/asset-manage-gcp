@@ -22,16 +22,21 @@ export default function AssetChart({ stocks }: AssetChartProps) {
     }, []);
 
     const data = stocks
-        .filter(item => item.totalValue > 0)
+        .filter(item => item.assetRatio > 0 || item.totalValue > 0)
         .map(stock => ({
             name: stock.name,
-            value: stock.totalValue,
+            value: stock.assetRatio, // 툴팁 및 차트 크기 비율을 담당할 데이터
+            originalValue: stock.totalValue // 원래 금액은 참고용 보관
         }));
 
     const totalAsset = stocks.reduce((sum, stock) => sum + stock.totalValue, 0);
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('ko-KR').format(Math.round(value)) + '원';
+    };
+
+    const formatPercent = (value: number) => {
+        return (value * 100).toFixed(2) + '%';
     };
 
     if (!isMounted) return <div className="card" style={{ height: '400px' }}>차트 로딩 중...</div>;
@@ -59,7 +64,7 @@ export default function AssetChart({ stocks }: AssetChartProps) {
                             ))}
                         </Pie>
                         <Tooltip
-                            formatter={(value: any) => formatCurrency(Number(value) || 0)}
+                            formatter={(value: any) => formatPercent(Number(value) || 0)}
                             contentStyle={{ backgroundColor: 'var(--bg-card-hover)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
                             itemStyle={{ color: 'var(--text-primary)' }}
                         />
