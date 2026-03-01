@@ -82,10 +82,13 @@ export async function fetchWealthData() {
         const name = row[0];
         if (!name || name.trim() === '') continue; // 종목명이 없으면 스킵
 
-        // 숫자 파싱 유틸리티 (콤마, % 기호 등 제거)
-        const parseNumber = (val: string) => {
+        // 숫자 파싱 유틸리티 (콤마, % 기호 등 제거 및 NaN 방어)
+        const parseNumber = (val?: string) => {
             if (!val) return 0;
-            return Number(val.replace(/[^0-9.-]/g, ''));
+            const cleanStr = val.toString().replace(/[^0-9.-]/g, '');
+            if (cleanStr === '' || cleanStr === '-' || cleanStr === '.') return 0;
+            const parsed = Number(cleanStr);
+            return isNaN(parsed) ? 0 : parsed;
         };
 
         stocks.push({
@@ -117,7 +120,12 @@ export async function fetchWealthData() {
 
         if (!label || !valueStr) continue;
 
-        const val = Number(valueStr.replace(/[^0-9.-]/g, ''));
+        const cleanValStr = valueStr.toString().replace(/[^0-9.-]/g, '');
+        let val = 0;
+        if (cleanValStr !== '' && cleanValStr !== '-' && cleanValStr !== '.') {
+            const parsed = Number(cleanValStr);
+            if (!isNaN(parsed)) val = parsed;
+        }
 
         if (label.includes('현금')) cash = val;
         else if (label.includes('주식')) stockAsset = val;
