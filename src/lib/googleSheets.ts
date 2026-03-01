@@ -83,6 +83,10 @@ export async function fetchWealthData() {
         const name = row[0];
         if (!name || name.trim() === '') continue; // 종목명이 없으면 스킵
 
+        // 계산용 행(TOTAL, 합계 등) 필터링
+        const upperName = name.trim().toUpperCase();
+        if (upperName.includes('TOTAL') || upperName.includes('합계') || upperName.includes('총계')) continue;
+
         // 숫자 파싱 유틸리티 (콤마, % 기호 등 제거 및 NaN 방어)
         const parseNumber = (val?: string) => {
             if (!val) return 0;
