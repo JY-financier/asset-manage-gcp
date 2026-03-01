@@ -32,6 +32,7 @@ export interface StockItem {
     totalValue: number;
     dayChange: number;
     returnRate: number;
+    assetRatio: number; // I열: 개별 종목의 자산 비중
 }
 
 export interface AssetAllocation {
@@ -49,10 +50,10 @@ export async function fetchWealthData() {
         console.warn("Using mock data because GOOGLE_CREDENTIALS_BASE64 is not set");
         return {
             stocks: [
-                { name: "삼성전자", buyPrice: 70000, currentPrice: 72000, quantity: 100, totalValue: 7200000, dayChange: 0.007, returnRate: 0.028 },
-                { name: "현대차", buyPrice: 200000, currentPrice: 195000, quantity: 50, totalValue: 9750000, dayChange: -0.012, returnRate: -0.025 },
-                { name: "Apple (AAPL)", buyPrice: 150000, currentPrice: 165000, quantity: 20, totalValue: 3300000, dayChange: 0.021, returnRate: 0.1 },
-                { name: "리얼티인컴 (O)", buyPrice: 70000, currentPrice: 68000, quantity: 100, totalValue: 6800000, dayChange: 0, returnRate: -0.028 },
+                { name: "삼성전자", buyPrice: 70000, currentPrice: 72000, quantity: 100, totalValue: 7200000, dayChange: 0.007, returnRate: 0.028, assetRatio: 0.25 },
+                { name: "현대차", buyPrice: 200000, currentPrice: 195000, quantity: 50, totalValue: 9750000, dayChange: -0.012, returnRate: -0.025, assetRatio: 0.35 },
+                { name: "Apple (AAPL)", buyPrice: 150000, currentPrice: 165000, quantity: 20, totalValue: 3300000, dayChange: 0.021, returnRate: 0.1, assetRatio: 0.15 },
+                { name: "리얼티인컴 (O)", buyPrice: 70000, currentPrice: 68000, quantity: 100, totalValue: 6800000, dayChange: 0, returnRate: -0.028, assetRatio: 0.25 },
             ],
             assetAllocation: {
                 cash: 6000000,
@@ -69,10 +70,10 @@ export async function fetchWealthData() {
     const sheets = await getGoogleSheetsClient();
 
     // 1. 주식 현황 가져오기 (2~11행 지정을 포함하여 넉넉하게 2~50행 파싱)
-    // B열: 종목명, C열: 매수가, D열: 현재가, E열: 수량, F열: 평가금액, G열: 전일비, H열: 수익률
+    // B열: 종목명, C열: 매수가, D열: 현재가, E열: 수량, F열: 평가금액, G열: 전일비, H열: 수익률, I열: 자산 비중
     const stockRes = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: 'chart!B2:H50',
+        range: 'chart!B2:I50',
     });
 
     const stockRows = stockRes.data.values || [];
@@ -99,6 +100,7 @@ export async function fetchWealthData() {
             totalValue: parseNumber(row[4]),
             dayChange: parseNumber(row[5]) / 100, // 전일비가 % 값이라고 가정하여 1.5% 처럼 올 경우 0.015 로 변환
             returnRate: parseNumber(row[6]) / 100, // 수익률 변환
+            assetRatio: parseNumber(row[7]) / 100, // I열 자산 비중 (퍼센트일 경우를 고려해 / 100, 데이터 포맷에 따라 조정 가능)
         });
     }
 

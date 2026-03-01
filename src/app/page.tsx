@@ -6,7 +6,9 @@ import AssetChart from '@/components/AssetChart';
 export const revalidate = 60; // 60초마다 데이터 재검증 (캐싱)
 
 export default async function Home() {
-  const { stocks, assetAllocation } = await fetchWealthData();
+  const { stocks } = await fetchWealthData();
+
+  const totalStockValue = stocks.reduce((acc, stock) => acc + stock.totalValue, 0);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('ko-KR').format(Math.round(value)) + '원';
@@ -23,13 +25,13 @@ export default async function Home() {
 
       {/* 총 자산 하이라이트 */}
       <div className="card" style={{ marginBottom: '32px', background: 'linear-gradient(135deg, var(--accent) 0%, #a29bfe 100%)', color: '#fff', border: 'none' }}>
-        <div style={{ fontSize: '1.125rem', opacity: 0.9, marginBottom: '8px' }}>총 평가금액</div>
-        <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>{formatCurrency(assetAllocation.total)}</div>
+        <div style={{ fontSize: '1.125rem', opacity: 0.9, marginBottom: '8px' }}>주식 총 평가금액</div>
+        <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>{formatCurrency(totalStockValue)}</div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
         <StockDashboard stocks={stocks} />
-        <AssetChart allocation={assetAllocation} />
+        <AssetChart stocks={stocks} />
       </div>
     </main>
   );

@@ -2,26 +2,33 @@
 
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { AssetAllocation } from '@/lib/googleSheets';
+import { StockItem } from '@/lib/googleSheets';
 
 interface AssetChartProps {
-    allocation: AssetAllocation;
+    stocks: StockItem[];
 }
 
-const COLORS = ['#6C5CE7', '#2ED573', '#FF4757', '#FFA502'];
+const COLORS = [
+    '#6C5CE7', '#2ED573', '#FF4757', '#FFA502',
+    '#0984E3', '#00B894', '#E84393', '#FDCB6E',
+    '#00CEC9', '#D63031', '#6C5CE7', '#B2BEC3'
+];
 
-export default function AssetChart({ allocation }: AssetChartProps) {
+export default function AssetChart({ stocks }: AssetChartProps) {
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
     }, []);
 
-    const data = [
-        { name: '현금', value: allocation.cash },
-        { name: '주식', value: allocation.stock },
-        { name: 'TDF', value: allocation.tdf },
-    ].filter(item => item.value > 0);
+    const data = stocks
+        .filter(item => item.totalValue > 0)
+        .map(stock => ({
+            name: stock.name,
+            value: stock.totalValue,
+        }));
+
+    const totalAsset = stocks.reduce((sum, stock) => sum + stock.totalValue, 0);
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('ko-KR').format(Math.round(value)) + '원';
@@ -74,9 +81,9 @@ export default function AssetChart({ allocation }: AssetChartProps) {
                     pointerEvents: 'none',
                     marginTop: '-18px'
                 }}>
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>총 자산</div>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>주식 총 평가금액</div>
                     <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                        {formatCurrency(allocation.total)}
+                        {formatCurrency(totalAsset)}
                     </div>
                 </div>
             </div>

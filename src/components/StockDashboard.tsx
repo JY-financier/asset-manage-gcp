@@ -29,6 +29,7 @@ export default function StockDashboard({ stocks }: StockDashboardProps) {
                             <th style={{ padding: '12px 8px', textAlign: 'right' }}>현재가</th>
                             <th style={{ padding: '12px 8px', textAlign: 'right' }}>수량</th>
                             <th style={{ padding: '12px 8px', textAlign: 'right' }}>평가금액</th>
+                            <th style={{ padding: '12px 8px', textAlign: 'right' }}>비중</th>
                             <th style={{ padding: '12px 8px', textAlign: 'right' }}>전일비</th>
                             <th style={{ padding: '12px 8px', textAlign: 'right' }}>수익률</th>
                         </tr>
@@ -51,6 +52,10 @@ export default function StockDashboard({ stocks }: StockDashboardProps) {
                                     <td style={{ padding: '12px 8px', textAlign: 'right' }}>{stock.quantity.toLocaleString()}</td>
                                     <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(stock.totalValue)}</td>
 
+                                    <td style={{ padding: '12px 8px', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                                        {formatPercent(stock.assetRatio)}
+                                    </td>
+
                                     <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 600, color: stock.dayChange > 0 ? '#FF4757' : (stock.dayChange < 0 ? '#37A2EB' : 'inherit') }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
                                             {stock.dayChange > 0 ? <TrendingUp size={16} /> : (stock.dayChange < 0 ? <TrendingDown size={16} /> : <Minus size={16} color="var(--text-secondary)" />)}
@@ -67,7 +72,7 @@ export default function StockDashboard({ stocks }: StockDashboardProps) {
 
                         {stocks.length === 0 && (
                             <tr>
-                                <td colSpan={7} style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                                <td colSpan={8} style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                                     주식 데이터가 없습니다.
                                 </td>
                             </tr>
