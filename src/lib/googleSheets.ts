@@ -68,11 +68,11 @@ export async function fetchWealthData() {
 
     const sheets = await getGoogleSheetsClient();
 
-    // 1. 주식 현황 가져오기 (행 추가/삭제 고려하여 넉넉하게 8~50행 파싱)
+    // 1. 주식 현황 가져오기 (2~11행 지정을 포함하여 넉넉하게 2~50행 파싱)
     // B열: 종목명, C열: 매수가, D열: 현재가, E열: 수량, F열: 평가금액, G열: 전일비, H열: 수익률
     const stockRes = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: 'chart!B8:H50',
+        range: 'chart!B2:H50',
     });
 
     const stockRows = stockRes.data.values || [];
@@ -102,12 +102,10 @@ export async function fetchWealthData() {
         });
     }
 
-    // 2. 자산 비중 데이터 통째로 가져오기 (라벨 위치 가변성에 대응)
-    // I열 데이터 (보통 I7 등에 현금 비중) => G~I 열이나 F~I 등 넓게 가져와서 I열 값만 파싱해도 됨
-    // H열에 레이블("현금", "주식", "TDF", "총 자산")이 있고 I열에 값이 있다고 가정.
+    // 2. 자산 비중 데이터 통째로 가져오기 (값은 항상 I열 참조)
     const assetRes = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: 'chart!F1:I50',
+        range: 'chart!A1:J50',
     });
 
     const assetRows = assetRes.data.values || [];
@@ -115,8 +113,18 @@ export async function fetchWealthData() {
     let cash = 0, stockAsset = 0, tdf = 0, total = 0;
 
     for (const row of assetRows) {
-        const label = (row[2] || '').toString().trim(); // H열 (F가 0, G가 1, H가 2)
-        const valueStr = (row[3] || '').toString(); // I열
+        let label = '';
+        // A~H열(인덱스 0~7) 안에서 주요 키워드(라벨)를 찾습니다.
+        for (let j = 0; j < 8; j++) {
+            const cell = (row[j] || '').toString().trim();
+            if (cell.includes('현금') || cell.includes('주식') || cell.includes('TDF') || cell.includes('총 자산') || cell.includes('총 평가금액')) {
+                label = cell;
+                break;
+            }
+        }
+
+        // 사용자의 요청대로 자산 비중 값은 반드시 I열(인덱스 8)에서 가져옵니다.
+        const valueStr = (row[8] || '').toString();
 
         if (!label || !valueStr) continue;
 
