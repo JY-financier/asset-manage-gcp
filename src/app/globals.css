@@ -97,3 +97,10 @@ a {
   outline: none;
   border-color: var(--accent);
 }
+
+/* 보유 종목 표: 좁은 화면(모바일)에서 부가 열 숨김 */
+@media (max-width: 768px) {
+  .col-desktop-only {
+    display: none;
+  }
+}

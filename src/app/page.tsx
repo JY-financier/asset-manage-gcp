@@ -72,8 +72,39 @@ function toKrw(value: number | null, currency: string, fxRate: number | null): n
     return null;
 }
 
+// 정렬 우선순위: 주식(국내) → 주식(미국) → 리츠(미국) → 채권(미국) → 그외
+function categoryRank(category: string | null): number {
+    switch (category) {
+        case "주식(국내)": return 0;
+        case "주식(미국)": return 1;
+        case "리츠(미국)": return 2;
+        case "채권(미국)": return 3;
+        default: return 4;
+    }
+}
+// 통화 우선순위: 원화 먼저 → 달러 → 그외
+function currencyRank(currency: string): number {
+    if (currency === "KRW") return 0;
+    if (currency === "USD") return 1;
+    return 2;
+}
+// 그룹 내 평가금액 큰 순 (시세 없으면 매입원가로 대체)
+function sortValue(h: HoldingRow): number {
+    return h.market_value ?? h.total_cost ?? 0;
+}
+function sortHoldings(holdings: HoldingRow[]): HoldingRow[] {
+    return [...holdings].sort((a, b) => {
+        const c = categoryRank(a.category) - categoryRank(b.category);
+        if (c !== 0) return c;
+        const cur = currencyRank(a.currency) - currencyRank(b.currency);
+        if (cur !== 0) return cur;
+        return sortValue(b) - sortValue(a);
+    });
+}
+
 export default async function Home() {
-    const { holdings, fxRate, lastPriceUpdate, snapshots, error } = await fetchData();
+    const { holdings: rawHoldings, fxRate, lastPriceUpdate, snapshots, error } = await fetchData();
+    const holdings = sortHoldings(rawHoldings);
 
     const formatCurrency = (value: number) =>
         `${new Intl.NumberFormat("ko-KR").format(Math.round(value))}원`;
