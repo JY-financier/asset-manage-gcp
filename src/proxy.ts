@@ -5,7 +5,12 @@ export function proxy(request: NextRequest) {
     const currentPath = request.nextUrl.pathname;
 
     // 로그인 페이지·정적 리소스는 예외
-    if (currentPath.startsWith('/login') || currentPath.startsWith('/_next')) {
+    // /api/cron은 Cron 전용 경로로, 라우트 내부에서 CRON_SECRET으로 자체 인증한다.
+    if (
+        currentPath.startsWith('/login') ||
+        currentPath.startsWith('/_next') ||
+        currentPath.startsWith('/api/cron')
+    ) {
         return NextResponse.next();
     }
 

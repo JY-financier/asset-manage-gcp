@@ -1,5 +1,6 @@
 import React from "react";
 import { getServiceClient, HoldingRow } from "@/lib/supabase";
+import { GAIN_COLOR, LOSS_COLOR } from "@/lib/colors";
 import StockDashboard from "@/components/StockDashboard";
 import AssetChart from "@/components/AssetChart";
 import Navigation from "@/components/Navigation";
@@ -9,46 +10,61 @@ export const revalidate = 0; // 새 거래·시세 즉시 반영. 데이터 규�
 
 const FX_TICKER = "FX:USDKRW";
 
+interface SnapshotRow {
+    ticker: string;
+    price: number;
+    currency: string;
+    snapshot_date: string;
+}
+
 interface PageData {
     holdings: HoldingRow[];
     fxRate: number | null;
     lastPriceUpdate: string | null;
+    snapshots: Map<string, SnapshotRow>;
     error: string | null;
 }
 
 async function fetchData(): Promise<PageData> {
     try {
         const supabase = getServiceClient();
-        const [holdingsRes, fxRes] = await Promise.all([
+        const [holdingsRes, fxRes, snapRes] = await Promise.all([
             supabase
                 .from("holdings_v")
                 .select("*")
                 .order("category", { ascending: true })
                 .order("name", { ascending: true }),
             supabase.from("prices").select("current_price, updated_at").eq("ticker", FX_TICKER).maybeSingle(),
+            supabase.from("price_snapshots").select("ticker, price, currency, snapshot_date"),
         ]);
 
         if (holdingsRes.error) {
-            return { holdings: [], fxRate: null, lastPriceUpdate: null, error: holdingsRes.error.message };
+            return { holdings: [], fxRate: null, lastPriceUpdate: null, snapshots: new Map(), error: holdingsRes.error.message };
         }
 
         const holdings = (holdingsRes.data ?? []) as HoldingRow[];
         const fxRate = fxRes.data?.current_price ?? null;
 
-        // 가장 최근 시세 갱신 시각
         const lastPriceUpdate = holdings.reduce<string | null>((latest, h) => {
             if (!h.price_updated_at) return latest;
             return !latest || h.price_updated_at > latest ? h.price_updated_at : latest;
         }, null);
 
-        return { holdings, fxRate, lastPriceUpdate, error: null };
+        // 티커별 최신 스냅샷만 남긴다
+        const snapshots = new Map<string, SnapshotRow>();
+        for (const s of (snapRes.data ?? []) as SnapshotRow[]) {
+            const ex = snapshots.get(s.ticker);
+            if (!ex || s.snapshot_date > ex.snapshot_date) snapshots.set(s.ticker, s);
+        }
+
+        return { holdings, fxRate, lastPriceUpdate, snapshots, error: null };
     } catch (e) {
         const msg = e instanceof Error ? e.message : "알 수 없는 오류";
-        return { holdings: [], fxRate: null, lastPriceUpdate: null, error: msg };
+        return { holdings: [], fxRate: null, lastPriceUpdate: null, snapshots: new Map(), error: msg };
     }
 }
 
-// KRW 환산 값 (USD 자산은 환율 적용, 환율 없으면 null)
+// USD 값을 KRW로 환산 (환율 없으면 null)
 function toKrw(value: number | null, currency: string, fxRate: number | null): number | null {
     if (value === null) return null;
     if (currency === "KRW") return value;
@@ -57,15 +73,22 @@ function toKrw(value: number | null, currency: string, fxRate: number | null): n
 }
 
 export default async function Home() {
-    const { holdings, fxRate, lastPriceUpdate, error } = await fetchData();
+    const { holdings, fxRate, lastPriceUpdate, snapshots, error } = await fetchData();
 
     const formatCurrency = (value: number) =>
         `${new Intl.NumberFormat("ko-KR").format(Math.round(value))}원`;
+    const formatSigned = (value: number) =>
+        `${value >= 0 ? "+" : "-"}${new Intl.NumberFormat("ko-KR").format(Math.abs(Math.round(value)))}원`;
 
-    // KRW 통일 집계
+    // ---- KRW 통일 집계 ----
     let totalCost = 0;
     let totalValue = 0;
-    let valueMissing = false; // 시세 없는 종목 존재 여부
+    let valueMissing = false;
+
+    // 전일비 집계
+    let dayChange = 0;
+    let dayBaseline = 0;
+    let dayChangeAvailable = snapshots.size > 0;
 
     for (const h of holdings) {
         const cost = toKrw(h.total_cost, h.currency, fxRate);
@@ -77,11 +100,35 @@ export default async function Home() {
         } else {
             totalValue += mv;
         }
+
+        // 전일비: (현재가 - 스냅샷가) * 수량, KRW 환산
+        const snap = snapshots.get(h.ticker);
+        if (snap && h.current_price !== null) {
+            const diffStored = (h.current_price - snap.price) * h.total_qty;
+            const baseStored = snap.price * h.total_qty;
+            if (h.currency === "USD") {
+                if (fxRate) {
+                    dayChange += diffStored * fxRate;
+                    dayBaseline += baseStored * fxRate;
+                } else {
+                    dayChangeAvailable = false;
+                }
+            } else {
+                dayChange += diffStored;
+                dayBaseline += baseStored;
+            }
+        } else if (h.current_price !== null) {
+            // 시세는 있는데 스냅샷이 없는 종목 → 전일비 불완전
+            dayChangeAvailable = false;
+        }
     }
 
     const totalPnl = !valueMissing && totalCost > 0 ? totalValue - totalCost : null;
     const totalReturn = totalPnl !== null && totalCost > 0 ? totalPnl / totalCost : null;
-    const pnlColor = totalPnl === null ? "#fff" : totalPnl >= 0 ? "#FFD5DA" : "#CDE7FF";
+    const dayChangePct = dayChangeAvailable && dayBaseline > 0 ? dayChange / dayBaseline : null;
+
+    const metricValueStyle: React.CSSProperties = { fontSize: "1.6rem", fontWeight: 800, lineHeight: 1.2 };
+    const metricLabelStyle: React.CSSProperties = { fontSize: "0.9rem", opacity: 0.9, marginBottom: "6px" };
 
     return (
         <main
@@ -99,7 +146,7 @@ export default async function Home() {
                         WebkitTextFillColor: "transparent",
                     }}
                 >
-                    개인 자산 대시보드
+                    자산 대시보드
                 </h1>
                 <p className="text-secondary">Supabase 기반 실시간 매매일지 · 포트폴리오</p>
             </header>
@@ -128,36 +175,63 @@ export default async function Home() {
                     border: "none",
                 }}
             >
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "24px", justifyContent: "space-between" }}>
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+                        gap: "20px",
+                    }}
+                >
+                    {/* 총 평가금액 */}
                     <div>
-                        <div style={{ fontSize: "0.95rem", opacity: 0.9, marginBottom: "4px" }}>총 평가금액 (KRW 환산)</div>
-                        <div style={{ fontSize: "2rem", fontWeight: 800 }}>
+                        <div style={metricLabelStyle}>총 평가금액</div>
+                        <div style={metricValueStyle}>
                             {valueMissing ? "시세 갱신 필요" : formatCurrency(totalValue)}
                         </div>
                         {fxRate && (
-                            <div style={{ fontSize: "0.75rem", opacity: 0.75, marginTop: "4px" }}>
+                            <div style={{ fontSize: "0.72rem", opacity: 0.72, marginTop: "4px" }}>
                                 환율 USD/KRW {new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(fxRate)}
                             </div>
                         )}
                     </div>
+
+                    {/* 총 매입원가 */}
                     <div>
-                        <div style={{ fontSize: "0.95rem", opacity: 0.9, marginBottom: "4px" }}>총 매입원가</div>
-                        <div style={{ fontSize: "2rem", fontWeight: 800 }}>{formatCurrency(totalCost)}</div>
-                        <div style={{ fontSize: "0.75rem", opacity: 0.75, marginTop: "4px" }}>
+                        <div style={metricLabelStyle}>총 매입원가</div>
+                        <div style={metricValueStyle}>{formatCurrency(totalCost)}</div>
+                        <div style={{ fontSize: "0.72rem", opacity: 0.72, marginTop: "4px" }}>
                             보유 {holdings.length}종목
                         </div>
                     </div>
+
+                    {/* 평가손익 */}
                     <div>
-                        <div style={{ fontSize: "0.95rem", opacity: 0.9, marginBottom: "4px" }}>평가손익</div>
-                        <div style={{ fontSize: "2rem", fontWeight: 800, color: pnlColor }}>
-                            {totalPnl === null
-                                ? "-"
-                                : `${totalPnl >= 0 ? "+" : ""}${formatCurrency(totalPnl)}`}
+                        <div style={metricLabelStyle}>평가손익</div>
+                        <div style={{ ...metricValueStyle, color: totalPnl === null ? "#fff" : totalPnl >= 0 ? GAIN_COLOR : LOSS_COLOR }}>
+                            {totalPnl === null ? "-" : formatSigned(totalPnl)}
                         </div>
                         {totalReturn !== null && (
-                            <div style={{ fontSize: "0.85rem", fontWeight: 700, marginTop: "4px", color: pnlColor }}>
+                            <div style={{ fontSize: "0.85rem", fontWeight: 700, marginTop: "4px", color: totalReturn >= 0 ? GAIN_COLOR : LOSS_COLOR }}>
                                 {totalReturn >= 0 ? "+" : ""}
                                 {(totalReturn * 100).toFixed(2)}%
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 전일비 */}
+                    <div>
+                        <div style={metricLabelStyle}>전일비</div>
+                        <div style={{ ...metricValueStyle, color: !dayChangeAvailable ? "#fff" : dayChange >= 0 ? GAIN_COLOR : LOSS_COLOR }}>
+                            {!dayChangeAvailable ? "준비 중" : formatSigned(dayChange)}
+                        </div>
+                        {dayChangePct !== null ? (
+                            <div style={{ fontSize: "0.85rem", fontWeight: 700, marginTop: "4px", color: dayChangePct >= 0 ? GAIN_COLOR : LOSS_COLOR }}>
+                                {dayChangePct >= 0 ? "+" : ""}
+                                {(dayChangePct * 100).toFixed(2)}%
+                            </div>
+                        ) : (
+                            <div style={{ fontSize: "0.72rem", opacity: 0.72, marginTop: "4px" }}>
+                                자정 스냅샷 기준
                             </div>
                         )}
                     </div>

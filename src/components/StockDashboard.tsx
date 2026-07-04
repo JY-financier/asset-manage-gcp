@@ -2,6 +2,7 @@
 
 import React from "react";
 import { HoldingRow } from "@/lib/supabase";
+import { GAIN_COLOR, LOSS_COLOR } from "@/lib/colors";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface StockDashboardProps {
@@ -81,9 +82,9 @@ export default function StockDashboard({ holdings }: StockDashboardProps) {
                                 returnRate === null
                                     ? "inherit"
                                     : returnRate > 0
-                                    ? "#FF4757"
+                                    ? GAIN_COLOR
                                     : returnRate < 0
-                                    ? "#37A2EB"
+                                    ? LOSS_COLOR
                                     : "inherit";
                             const arrow =
                                 returnRate === null ? (
