@@ -158,7 +158,6 @@ export default async function Home() {
     const totalReturn = totalPnl !== null && totalCost > 0 ? totalPnl / totalCost : null;
     const dayChangePct = dayChangeAvailable && dayBaseline > 0 ? dayChange / dayBaseline : null;
 
-    const metricValueStyle: React.CSSProperties = { fontSize: "1.6rem", fontWeight: 800, lineHeight: 1.2 };
     const metricLabelStyle: React.CSSProperties = { fontSize: "0.9rem", opacity: 0.9, marginBottom: "6px" };
 
     return (
@@ -201,22 +200,16 @@ export default async function Home() {
                 className="card"
                 style={{
                     marginBottom: "24px",
-                    background: "linear-gradient(135deg, var(--accent) 0%, #a29bfe 100%)",
+                    background: "var(--accent)",
                     color: "#fff",
                     border: "none",
                 }}
             >
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-                        gap: "20px",
-                    }}
-                >
-                    {/* 총 평가금액 */}
+                <div className="metric-grid">
+                    {/* 총 평가금액 (중요) */}
                     <div>
                         <div style={metricLabelStyle}>총 평가금액</div>
-                        <div style={metricValueStyle}>
+                        <div className="metric-value">
                             {valueMissing ? "시세 갱신 필요" : formatCurrency(totalValue)}
                         </div>
                         {fxRate && (
@@ -226,19 +219,19 @@ export default async function Home() {
                         )}
                     </div>
 
-                    {/* 총 매입원가 */}
+                    {/* 총 매입원가 (덜 중요 → 모바일 작은 글씨) */}
                     <div>
                         <div style={metricLabelStyle}>총 매입원가</div>
-                        <div style={metricValueStyle}>{formatCurrency(totalCost)}</div>
+                        <div className="metric-value-sub" style={{ color: "rgba(255, 255, 255, 0.6)" }}>{formatCurrency(totalCost)}</div>
                         <div style={{ fontSize: "0.72rem", opacity: 0.72, marginTop: "4px" }}>
                             보유 {holdings.length}종목
                         </div>
                     </div>
 
-                    {/* 평가손익 */}
+                    {/* 평가손익 (중요) */}
                     <div>
                         <div style={metricLabelStyle}>평가손익</div>
-                        <div style={{ ...metricValueStyle, color: totalPnl === null ? "#fff" : totalPnl >= 0 ? GAIN_COLOR : LOSS_COLOR }}>
+                        <div className="metric-value" style={{ color: totalPnl === null ? "#fff" : totalPnl >= 0 ? GAIN_COLOR : LOSS_COLOR }}>
                             {totalPnl === null ? "-" : formatSigned(totalPnl)}
                         </div>
                         {totalReturn !== null && (
@@ -249,10 +242,10 @@ export default async function Home() {
                         )}
                     </div>
 
-                    {/* 전일비 */}
+                    {/* 전일비 (덜 중요 → 모바일 작은 글씨) */}
                     <div>
                         <div style={metricLabelStyle}>전일비</div>
-                        <div style={{ ...metricValueStyle, color: !dayChangeAvailable ? "#fff" : dayChange >= 0 ? GAIN_COLOR : LOSS_COLOR }}>
+                        <div className="metric-value-sub" style={{ color: !dayChangeAvailable ? "#fff" : dayChange >= 0 ? GAIN_COLOR : LOSS_COLOR }}>
                             {!dayChangeAvailable ? "준비 중" : formatSigned(dayChange)}
                         </div>
                         {dayChangePct !== null ? (

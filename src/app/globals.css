@@ -104,3 +104,27 @@ a {
     display: none;
   }
 }
+
+/* 헤더 지표 카드 */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px;
+}
+.metric-value,
+.metric-value-sub {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+/* 모바일(≈412px): 2×2 배치, 네 값 모두 동일 글씨 크기 */
+@media (max-width: 480px) {
+  .metric-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 16px;
+  }
+  .metric-value,
+  .metric-value-sub {
+    font-size: 1.4rem;
+  }
+}
