@@ -6,6 +6,7 @@ import { HoldingRow } from "@/lib/supabase";
 
 interface AssetChartProps {
     holdings: HoldingRow[];
+    fxRate: number | null; // USD/KRW
 }
 
 const COLORS = [
@@ -14,26 +15,30 @@ const COLORS = [
     "#00CEC9", "#D63031", "#B2BEC3",
 ];
 
-// KRW로 통일한 대략적인 원가 (USD/JPY는 시세 없을 시 현지가 그대로 사용 - 정확한 환율은 Phase 4에서)
-function costInKrw(h: HoldingRow): number {
-    return h.total_cost || 0;
+// 평가금액 우선, 없으면 매입원가. USD는 환율 적용해 KRW로 통일.
+function valueInKrw(h: HoldingRow, fxRate: number | null): number {
+    const base = h.market_value ?? h.total_cost ?? 0;
+    if (h.currency === "USD") return fxRate ? base * fxRate : 0;
+    return base;
 }
 
-export default function AssetChart({ holdings }: AssetChartProps) {
+export default function AssetChart({ holdings, fxRate }: AssetChartProps) {
     const [isMounted, setIsMounted] = useState(false);
     useEffect(() => setIsMounted(true), []);
 
+    const hasMarketValue = holdings.some((h) => h.market_value !== null);
+
     const data = useMemo(() => {
-        const totalCost = holdings.reduce((s, h) => s + costInKrw(h), 0);
+        const total = holdings.reduce((s, h) => s + valueInKrw(h, fxRate), 0);
         return holdings
-            .filter((h) => costInKrw(h) > 0)
+            .filter((h) => valueInKrw(h, fxRate) > 0)
             .map((h) => ({
                 name: h.name,
-                value: costInKrw(h),
-                ratio: totalCost > 0 ? costInKrw(h) / totalCost : 0,
+                value: valueInKrw(h, fxRate),
+                ratio: total > 0 ? valueInKrw(h, fxRate) / total : 0,
                 currency: h.currency,
             }));
-    }, [holdings]);
+    }, [holdings, fxRate]);
 
     const totalCost = data.reduce((s, d) => s + d.value, 0);
 
@@ -46,9 +51,13 @@ export default function AssetChart({ holdings }: AssetChartProps) {
 
     return (
         <div className="card" style={{ height: "100%", minHeight: "400px", display: "flex", flexDirection: "column" }}>
-            <h2 style={{ marginBottom: "8px", fontSize: "1.25rem", fontWeight: 600 }}>🥧 종목별 비중 (매입원가 기준)</h2>
+            <h2 style={{ marginBottom: "8px", fontSize: "1.25rem", fontWeight: 600 }}>
+                🥧 종목별 비중 ({hasMarketValue ? "평가금액" : "매입원가"} 기준)
+            </h2>
             <p className="text-secondary" style={{ marginBottom: "16px", fontSize: "0.85rem" }}>
-                Phase 4에서 실시간 시세 반영 시 평가금액 기준으로 자동 전환됩니다.
+                {hasMarketValue
+                    ? "USD 자산은 현재 환율로 KRW 환산했습니다."
+                    : "시세 갱신 후 평가금액 기준으로 자동 전환됩니다."}
             </p>
             <div style={{ flex: 1, position: "relative", minHeight: "300px" }}>
                 <ResponsiveContainer width="100%" height={300}>
@@ -103,7 +112,7 @@ export default function AssetChart({ holdings }: AssetChartProps) {
                     }}
                 >
                     <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "4px" }}>
-                        총 매입원가
+                        {hasMarketValue ? "총 평가금액" : "총 매입원가"}
                     </div>
                     <div style={{ fontSize: "1.15rem", fontWeight: 700 }}>{formatCurrency(totalCost)}</div>
                 </div>
