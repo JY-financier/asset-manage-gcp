@@ -10,8 +10,19 @@ const items = [
     { href: "/trades/new", label: "거래 추가", icon: PlusCircle },
 ];
 
+function matches(href: string, pathname: string): boolean {
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(href + "/");
+}
+
 export default function Navigation() {
     const pathname = usePathname();
+
+    // 매칭되는 항목 중 가장 구체적인(가장 긴) 경로 하나만 활성화한다.
+    // 예) /trades/new 에서는 /trades 가 아니라 /trades/new 만 활성화.
+    const activeHref = items
+        .filter((it) => matches(it.href, pathname))
+        .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
     return (
         <nav
@@ -27,10 +38,7 @@ export default function Navigation() {
             }}
         >
             {items.map(({ href, label, icon: Icon }) => {
-                const active =
-                    href === "/"
-                        ? pathname === "/"
-                        : pathname === href || pathname.startsWith(href + "/");
+                const active = href === activeHref;
                 return (
                     <Link
                         key={href}

@@ -2,7 +2,8 @@ import React from "react";
 import Link from "next/link";
 import { getServiceClient, TradeRow } from "@/lib/supabase";
 import Navigation from "@/components/Navigation";
-import { PlusCircle } from "lucide-react";
+import DeleteTradeButton from "@/components/DeleteTradeButton";
+import { PlusCircle, Pencil } from "lucide-react";
 
 export const revalidate = 0; // 항상 최신 데이터
 
@@ -87,12 +88,13 @@ export default async function TradesPage() {
                                 <th style={{ padding: "12px 8px", textAlign: "right" }}>수량</th>
                                 <th style={{ padding: "12px 8px", textAlign: "right" }}>금액</th>
                                 <th style={{ padding: "12px 8px" }}>메모</th>
+                                <th style={{ padding: "12px 8px", textAlign: "center" }}>관리</th>
                             </tr>
                         </thead>
                         <tbody>
                             {trades.length === 0 && (
                                 <tr>
-                                    <td colSpan={9} style={{ padding: "40px", textAlign: "center", color: "var(--text-secondary)" }}>
+                                    <td colSpan={10} style={{ padding: "40px", textAlign: "center", color: "var(--text-secondary)" }}>
                                         매매 기록이 없습니다. 상단 &ldquo;거래 추가&rdquo;로 시작하십시오.
                                     </td>
                                 </tr>
@@ -142,6 +144,29 @@ export default async function TradesPage() {
                                         </td>
                                         <td style={{ padding: "12px 8px", color: "var(--text-secondary)", fontSize: "0.85rem" }}>
                                             {t.memo ?? ""}
+                                        </td>
+                                        <td style={{ padding: "12px 8px", whiteSpace: "nowrap" }}>
+                                            <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                                                <Link
+                                                    href={`/trades/${t.id}/edit`}
+                                                    aria-label="거래 수정"
+                                                    title="수정"
+                                                    style={{
+                                                        border: "1px solid var(--border)",
+                                                        color: "var(--text-secondary)",
+                                                        borderRadius: "6px",
+                                                        padding: "6px 8px",
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                    }}
+                                                >
+                                                    <Pencil size={15} />
+                                                </Link>
+                                                <DeleteTradeButton
+                                                    id={t.id}
+                                                    label={`${t.trade_date} · ${t.name} · ${isBuy ? "매수" : "매도"} ${t.quantity}주 @ ${formatMoney(t.price, t.currency)}`}
+                                                />
+                                            </div>
                                         </td>
                                     </tr>
                                 );
