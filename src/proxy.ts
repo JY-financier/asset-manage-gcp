@@ -4,8 +4,8 @@ import type { NextRequest } from 'next/server';
 export function proxy(request: NextRequest) {
     const currentPath = request.nextUrl.pathname;
 
-    // 로그인 페이지나 API 등은 예외 처리
-    if (currentPath.startsWith('/login') || currentPath.startsWith('/api') || currentPath.startsWith('/_next')) {
+    // 로그인 페이지·정적 리소스는 예외
+    if (currentPath.startsWith('/login') || currentPath.startsWith('/_next')) {
         return NextResponse.next();
     }
 
@@ -17,16 +17,23 @@ export function proxy(request: NextRequest) {
     }
 
     const token = request.cookies.get('app_auth_token')?.value;
+    const authorized = token === appPassword;
 
-    // 토큰이 비밀번호와 일치하지 않으면 로그인 페이지로 리다이렉트
-    if (token !== appPassword) {
-        const loginUrl = new URL('/login', request.url);
-        return NextResponse.redirect(loginUrl);
+    if (authorized) {
+        return NextResponse.next();
     }
 
-    return NextResponse.next();
+    // 미인증 상태 처리
+    if (currentPath.startsWith('/api')) {
+        // API는 로그인 리다이렉트 대신 401 JSON 반환
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 페이지는 로그인으로 리다이렉트
+    const loginUrl = new URL('/login', request.url);
+    return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
-    matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+    matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

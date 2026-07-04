@@ -33,6 +33,14 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# 개인 포트폴리오 데이터 (public repo이므로 커밋 금지)
+supabase/002_seed_holdings.sql
+
+# 무관한 개인 파일
+*.docx
+create_word.py
+txt_to_docx.py
+
 # vercel
 .vercel
 
