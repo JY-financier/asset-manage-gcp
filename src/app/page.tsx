@@ -176,9 +176,9 @@ export default async function Home() {
                         WebkitTextFillColor: "transparent",
                     }}
                 >
-                    자산 대시보드
+                    주식
                 </h1>
-                <p className="text-secondary">Supabase 기반 실시간 매매일지 · 포트폴리오</p>
+                <p className="text-secondary">보유 종목 현황 · 평가손익 · 전일비</p>
             </header>
 
             <Navigation />

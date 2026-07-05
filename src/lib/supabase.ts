@@ -76,3 +76,31 @@ export interface HoldingRow {
     market_value: number | null;
     unrealized_pnl: number | null;
 }
+
+// 비주식 자산. 이동 자유도 기준 구분: 파킹(자유 이동) / 연금(정기예금·TDF 등 묶인 돈).
+export type OtherAssetCategory = '파킹' | '연금';
+
+export interface OtherAssetRow {
+    id: number;
+    category: string;              // 파킹 | 연금
+    subcategory: string | null;    // 연금: 예금 | TDF (파킹은 null)
+    name: string;
+    account: string | null;
+    principal: number | null;      // 원금 (연금 손익·수익률용, 파킹은 null)
+    amount: number;                // 평가금액 (currency 기준)
+    currency: Currency;
+    memo: string | null;
+    updated_at: string;
+    created_at: string;
+}
+
+export interface OtherAssetInsert {
+    category: string;
+    subcategory?: string | null;
+    name: string;
+    account?: string | null;
+    principal?: number | null;
+    amount: number;
+    currency?: Currency;
+    memo?: string | null;
+}

@@ -41,7 +41,7 @@ function formatPercent(value: number | null | undefined) {
 const HIDE = "col-desktop-only";
 
 export default function StockDashboard({ holdings }: StockDashboardProps) {
-    const thBase: React.CSSProperties = { padding: "12px 8px", whiteSpace: "nowrap" };
+    const thBase: React.CSSProperties = { padding: "12px 8px", whiteSpace: "nowrap", textAlign: "center" };
     const tdBase: React.CSSProperties = { padding: "12px 8px", whiteSpace: "nowrap" };
 
     return (
@@ -54,12 +54,12 @@ export default function StockDashboard({ holdings }: StockDashboardProps) {
                     <thead>
                         <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-secondary)" }}>
                             <th style={thBase}>종목</th>
-                            <th style={{ ...thBase, textAlign: "right" }}>현재가</th>
-                            <th style={{ ...thBase, textAlign: "right" }}>수익률</th>
-                            <th style={{ ...thBase, textAlign: "right" }}>평가금액</th>
-                            <th style={{ ...thBase, textAlign: "right" }}>손익</th>
-                            <th className={HIDE} style={{ ...thBase, textAlign: "right" }}>수량</th>
-                            <th className={HIDE} style={{ ...thBase, textAlign: "right" }}>평단</th>
+                            <th style={thBase}>현재가</th>
+                            <th style={thBase}>수익률</th>
+                            <th style={thBase}>평가금액</th>
+                            <th style={thBase}>손익</th>
+                            <th className={HIDE} style={thBase}>수량</th>
+                            <th className={HIDE} style={thBase}>평단</th>
                             <th className={HIDE} style={thBase}>구분</th>
                             <th className={HIDE} style={thBase}>계좌</th>
                         </tr>

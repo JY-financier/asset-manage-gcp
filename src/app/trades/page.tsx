@@ -79,15 +79,15 @@ export default async function TradesPage() {
                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "900px" }}>
                         <thead>
                             <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-secondary)" }}>
-                                <th style={{ padding: "12px 8px" }}>거래일</th>
-                                <th style={{ padding: "12px 8px" }}>종목</th>
-                                <th style={{ padding: "12px 8px" }}>구분</th>
-                                <th style={{ padding: "12px 8px" }}>계좌</th>
+                                <th style={{ padding: "12px 8px", textAlign: "center" }}>거래일</th>
+                                <th style={{ padding: "12px 8px", textAlign: "center" }}>종목</th>
+                                <th style={{ padding: "12px 8px", textAlign: "center" }}>구분</th>
+                                <th style={{ padding: "12px 8px", textAlign: "center" }}>계좌</th>
                                 <th style={{ padding: "12px 8px", textAlign: "center" }}>매매</th>
-                                <th style={{ padding: "12px 8px", textAlign: "right" }}>단가</th>
-                                <th style={{ padding: "12px 8px", textAlign: "right" }}>수량</th>
-                                <th style={{ padding: "12px 8px", textAlign: "right" }}>금액</th>
-                                <th style={{ padding: "12px 8px" }}>메모</th>
+                                <th style={{ padding: "12px 8px", textAlign: "center" }}>단가</th>
+                                <th style={{ padding: "12px 8px", textAlign: "center" }}>수량</th>
+                                <th style={{ padding: "12px 8px", textAlign: "center" }}>금액</th>
+                                <th style={{ padding: "12px 8px", textAlign: "center" }}>메모</th>
                                 <th style={{ padding: "12px 8px", textAlign: "center" }}>관리</th>
                             </tr>
                         </thead>

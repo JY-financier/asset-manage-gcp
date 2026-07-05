@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ListOrdered, PlusCircle } from "lucide-react";
+import { LineChart, ListOrdered, PlusCircle, LayoutDashboard } from "lucide-react";
 
 const items = [
-    { href: "/", label: "대시보드", icon: LayoutDashboard },
+    { href: "/", label: "주식", icon: LineChart },
     { href: "/trades", label: "매매일지", icon: ListOrdered },
     { href: "/trades/new", label: "거래 추가", icon: PlusCircle },
+    { href: "/portfolio", label: "대시보드", icon: LayoutDashboard },
 ];
 
 function matches(href: string, pathname: string): boolean {

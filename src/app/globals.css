@@ -128,3 +128,65 @@ a {
     font-size: 1.4rem;
   }
 }
+
+/* 파킹 테이블: 모바일은 꽉 채우고, PC는 내용 폭으로 모아 왼쪽 정렬(오른쪽에 여백) */
+.parking-table {
+  width: 100%;
+}
+@media (min-width: 769px) {
+  .parking-table {
+    width: auto;
+  }
+  .parking-table th,
+  .parking-table td {
+    padding-right: 40px;
+  }
+}
+
+/* 통합 대시보드 요약 카드 (주식/파킹/연금) */
+.pf-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.pf-summary-amount {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.pf-summary-pct {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+/* 모바일: 카드 1개당 1줄, 라벨 왼쪽 / 금액·비중 오른쪽 한 줄(개행 없음) */
+@media (max-width: 480px) {
+  .pf-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .pf-summary-card {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .pf-summary-label {
+    margin-bottom: 0 !important;
+    white-space: nowrap;
+  }
+  .pf-summary-figures {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .pf-summary-amount {
+    font-size: 1.15rem;
+  }
+  .pf-summary-pct {
+    margin-top: 0;
+  }
+}
