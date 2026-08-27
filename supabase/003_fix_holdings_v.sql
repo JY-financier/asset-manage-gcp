@@ -9,7 +9,9 @@
 
 DROP VIEW IF EXISTS holdings_v;
 
-CREATE VIEW holdings_v AS
+-- security_invoker=on: 뷰를 '조회한 사용자'의 권한으로 실행하여 밑단 trades/prices의 RLS가
+-- 뷰에도 적용되도록 함(Security Definer View 경고 해소). 앱은 service_role로 접근하므로 영향 없음.
+CREATE VIEW holdings_v WITH (security_invoker = on) AS
 WITH signed AS (
     SELECT
         ticker,

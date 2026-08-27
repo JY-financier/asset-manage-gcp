@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS price_snapshots (
 
 CREATE INDEX IF NOT EXISTS idx_snapshots_date ON price_snapshots(snapshot_date DESC);
 
-ALTER TABLE price_snapshots DISABLE ROW LEVEL SECURITY;
+ALTER TABLE price_snapshots ENABLE ROW LEVEL SECURITY;
 
 COMMENT ON TABLE price_snapshots IS '매일 자정(KST) 시세 스냅샷. 전일비 기준선.';
 

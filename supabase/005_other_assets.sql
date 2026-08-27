@@ -21,6 +21,6 @@ CREATE TABLE IF NOT EXISTS other_assets (
 
 CREATE INDEX IF NOT EXISTS idx_other_assets_category ON other_assets(category);
 
-ALTER TABLE other_assets DISABLE ROW LEVEL SECURITY;
+ALTER TABLE other_assets ENABLE ROW LEVEL SECURITY;
 
 COMMENT ON TABLE other_assets IS '비주식 자산(현금성/TDF/예금 등). 앱 자산 관리 화면에서 CRUD.';

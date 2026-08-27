@@ -103,6 +103,7 @@ WHERE a.total_qty > 0;
 
 COMMENT ON VIEW holdings_v IS '현재 보유 종목 집계. trades + prices를 조인하여 평단·평가금액·평가손익을 즉시 계산.';
 
--- 4. (선택) Row Level Security — Phase 1에서는 비활성으로 두고, 향후 인증 도입 시 활성화
-ALTER TABLE trades  DISABLE ROW LEVEL SECURITY;
-ALTER TABLE prices  DISABLE ROW LEVEL SECURITY;
+-- 4. Row Level Security — 활성화. 앱은 서버에서 service_role 키로만 접근(RLS 우회)하므로
+--    정책 없이 RLS만 켜면 공개 Data API 경로가 차단되고 앱 동작은 그대로 유지됩니다.
+ALTER TABLE trades  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prices  ENABLE ROW LEVEL SECURITY;
